@@ -1,0 +1,48 @@
+services:
+
+  service:
+    container_name: service
+    build:
+      context: './server'
+    ports:
+      - "9090:8080"
+    depends_on:
+      service_db:
+        condition: service_healthy
+    networks:
+      - local
+
+  service_db:
+    image: postgres:15.5-alpine3.18
+    container_name: service_db
+    environment:
+      POSTGRES_DB: service_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+    ports:
+      - "5440:5432"
+    healthcheck:
+      test: "exit 0"
+    volumes:
+      - service_db_data:/var/lib/postgresql/data
+    networks:
+      - local
+
+  webview:
+    container_name: webview
+    build:
+      context: './front'
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./front:/app
+    networks:
+      - local
+
+volumes:
+  service_db_data:
+
+networks:
+  local:
+    name: local
+    driver: bridge
